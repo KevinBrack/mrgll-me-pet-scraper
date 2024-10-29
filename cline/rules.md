@@ -11,3 +11,4 @@
 9. Use async/await for asynchronous operations
 10. Follow RESTful conventions
 11. Maintain consistent code style
+12. Repository must be at https://github.com/KevinBrack/mrgll-me-pet-scraper
