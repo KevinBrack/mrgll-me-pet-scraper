@@ -21,6 +21,7 @@ class BlizzardService {
         }
 
         try {
+            console.log("Attempting to get Blizzard access token...");
             const response = await axios.post<TokenResponse>(
                 "https://us.battle.net/oauth/token",
                 new URLSearchParams({
@@ -36,9 +37,13 @@ class BlizzardService {
 
             this.accessToken = response.data.access_token;
             this.tokenExpiration = Date.now() + response.data.expires_in * 1000;
+            console.log("Successfully obtained access token");
             return this.accessToken;
-        } catch (error) {
-            console.error("Error getting Blizzard access token:", error);
+        } catch (error: any) {
+            console.error("Error getting Blizzard access token:", {
+                message: error.message,
+                response: error.response?.data,
+            });
             throw new Error("Failed to get access token");
         }
     }
@@ -47,17 +52,30 @@ class BlizzardService {
         url: string,
         params: Record<string, string> = {}
     ): Promise<T> {
-        const token = await this.getAccessToken();
-        const response = await axios.get<T>(url, {
-            params: {
-                ...params,
-                access_token: token,
-            },
-        });
-        return response.data;
+        try {
+            console.log(`Making request to: ${url}`);
+            const token = await this.getAccessToken();
+            const response = await axios.get<T>(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                params: {
+                    ...params,
+                },
+            });
+            console.log(`Successfully received response from: ${url}`);
+            return response.data;
+        } catch (error: any) {
+            console.error(`Error making request to ${url}:`, {
+                message: error.message,
+                response: error.response?.data,
+            });
+            throw error;
+        }
     }
 
     async getPetsList(): Promise<PetsListResponse> {
+        console.log("Fetching pets list...");
         return this.makeRequest<PetsListResponse>(
             "https://us.api.blizzard.com/data/wow/pet/index",
             {
@@ -68,6 +86,7 @@ class BlizzardService {
     }
 
     async getPetDetails(petId: number): Promise<PetDetailsResponse> {
+        console.log(`Fetching details for pet ID: ${petId}`);
         return this.makeRequest<PetDetailsResponse>(
             `https://us.api.blizzard.com/data/wow/pet/${petId}`,
             {
@@ -78,6 +97,7 @@ class BlizzardService {
     }
 
     async getPetMedia(petId: number): Promise<PetMediaDetails> {
+        console.log(`Fetching media for pet ID: ${petId}`);
         return this.makeRequest<PetMediaDetails>(
             `https://us.api.blizzard.com/data/wow/media/pet/${petId}`,
             {

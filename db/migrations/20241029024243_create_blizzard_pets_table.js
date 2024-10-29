@@ -26,8 +26,8 @@ exports.up = function (knex) {
         table.integer("media_id");
         table.string("media_href");
         table.boolean("should_exclude_if_uncollected");
-        table.jsonb("abilities");
-        table.jsonb("media_assets");
+        table.json("abilities");
+        table.json("media_assets");
         table.timestamps(true, true);
     });
 };
