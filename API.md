@@ -23,18 +23,30 @@ Generates an AI-powered battle narrative for two pets.
 #### Request Body
 
 ```typescript
-{
-    pet1: string; // Name of the first pet
-    pet2: string; // Name of the target pet
-    ability: string; // Name of the ability being used
+interface PetAbility {
+    name: string;
+    description: string;
+}
+
+interface Pet {
+    name: string;
+    description: string;
+    abilities: PetAbility[];
+}
+
+interface GenerateNarrativeRequest {
+    pet1: Pet;
+    pet2: Pet;
 }
 ```
 
 #### Response Format
 
 ```typescript
-{
-    narrative: string; // Generated battle narrative
+interface BattleNarrativeResponse {
+    title: string; // Epic one-line battle summary
+    description: string; // Detailed battle narrative
+    imagePrompt: string; // Generated image prompt for the battle
 }
 ```
 
@@ -42,36 +54,94 @@ Generates an AI-powered battle narrative for two pets.
 
 ```json
 {
-    "narrative": "With eyes gleaming with determination, Murkastrasza channels ancient draconic energy into a brilliant Living Flame, sending it spiraling towards Stinker in a dazzling display of magical prowess. The tiny dragon's attack illuminates the battlefield with a warm, ethereal glow, creating a spectacular moment of pet battle glory."
-}
-```
-
-#### Error Response Example
-
-```json
-{
-    "error": "Failed to generate battle narrative"
+    "title": "Murkastrasza's Living Flame Ignites the Halls of Valor",
+    "description": "Within the golden halls of Odyn's domain, the air crackled with arcane energy as Murkastrasza, descendant of the mighty Red Dragonflight...",
+    "imagePrompt": "A baby dragon with shimmering magenta scales and golden armor unleashes a brilliant burst of magical flame..."
 }
 ```
 
 ### POST /api/prompts/image
 
-Generates an AI-powered image prompt for a pet.
+Generates an AI-powered image prompt for a specific pet.
 
 #### Request Body
 
 ```typescript
-{
-    pet: string; // Name of the pet
-    description: string; // Base description of the pet
+interface GenerateImagePromptRequest {
+    petId: number;
+    imageSource?: string; // defaults to 'warcraftpets_images'
+    artStyle?: string; // defaults to 'chibi'
 }
 ```
 
 #### Response Format
 
 ```typescript
-{
-    imagePrompt: string; // Generated image prompt
+interface GenerateImagePromptResponse {
+    imagePrompt: string;
+    pet: {
+        id: number;
+        name: string;
+        description: string;
+        // ... other pet fields
+    };
+    imageData: {
+        pet_id: number;
+        pet_url: string;
+        pet_image_url: string;
+    };
+    artStyle: {
+        id: number;
+        name: string;
+        description: string;
+    };
+    promptRecord: {
+        id: number;
+        pet_id: number;
+        art_style_id: number;
+        image_source_table: string;
+        image_source_url: string;
+        generated_prompt: string;
+        original_description: string;
+        metadata: {
+            pet_name: string;
+            art_style_name: string;
+            source_pet_url: string;
+        };
+    };
+}
+```
+
+### POST /api/prompts/image/batch
+
+Batch generates image prompts for multiple pets.
+
+#### Request Body
+
+```typescript
+interface BatchGenerateImagePromptsRequest {
+    batchSize?: number; // defaults to 10
+    imageSource?: string; // defaults to 'warcraftpets_images'
+    artStyle?: string; // defaults to 'chibi'
+}
+```
+
+#### Response Format
+
+```typescript
+interface BatchGenerateImagePromptsResponse {
+    processed: number; // Total number of pets processed
+    successful: number; // Number of successful generations
+    failed: number; // Number of failed generations
+    results: Array<{
+        success: boolean;
+        pet_id: number;
+        pet_name: string;
+        promptRecord?: {
+            // Same as promptRecord in single generation
+        };
+        error?: string; // Present only if success is false
+    }>;
 }
 ```
 
@@ -79,15 +149,24 @@ Generates an AI-powered image prompt for a pet.
 
 ```json
 {
-    "imagePrompt": "A charming chibi-style baby dragon with magenta-red scales that shimmer like precious gems. The dragon strikes a playful pose, with tiny wings spread wide and golden eyes sparkling with mischief. Adorned with delicate golden armor accents that catch the light, the dragon's expression is warm and friendly. The scene is set in a soft, warm lighting that highlights the dragon's cute features and creates a gentle glow around its form."
-}
-```
-
-#### Error Response Example
-
-```json
-{
-    "error": "Failed to generate image prompt"
+    "processed": 10,
+    "successful": 10,
+    "failed": 0,
+    "results": [
+        {
+            "success": true,
+            "pet_id": 39,
+            "pet_name": "Mechanical Squirrel",
+            "promptRecord": {
+                "id": 1,
+                "pet_id": 39,
+                "art_style_id": 1,
+                "generated_prompt": "A whimsical mechanical creature..."
+                // ... other fields
+            }
+        }
+        // ... more results
+    ]
 }
 ```
 
@@ -105,12 +184,14 @@ All endpoints return appropriate HTTP status codes:
 
 -   200: Success
 -   400: Bad Request (invalid parameters)
+-   404: Not Found (pet, image, or art style not found)
 -   500: Server error
 
 Error responses include a message explaining what went wrong.
 
 ## Data Updates
 
--   Blizzard pet data is fetched fresh with each API call. Consider implementing a caching strategy if you need to call this endpoint frequently.
--   Warcraftpets image data is stored persistently and checked for duplicates before processing.
--   OpenRouter prompts are generated on-demand and not stored.
+-   Blizzard pet data is fetched fresh with each API call
+-   Warcraftpets image data is stored persistently and checked for duplicates
+-   Generated prompts are stored in app_prompts_pet_image table
+-   Batch processing skips pets that already have prompts for the specified art style and image source

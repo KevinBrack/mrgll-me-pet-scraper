@@ -12,6 +12,8 @@ A TypeScript/Node.js application that fetches and stores World of Warcraft battl
 -   AI-powered content generation through OpenRouter API:
     -   Dynamic battle narratives between pets
     -   Detailed image prompts for pet visualizations
+    -   Batch processing of image prompts with progress tracking
+    -   Art style customization with stored templates
 
 ## Prerequisites
 
@@ -82,7 +84,28 @@ Generate a battle narrative:
 ```bash
 curl -X POST http://localhost:3000/api/prompts/narrative \
   -H "Content-Type: application/json" \
-  -d '{"pet1":"Murkastrasza","pet2":"Stinker","ability":"Living Flame"}'
+  -d '{
+    "pet1": {
+      "name": "Murkastrasza",
+      "description": "A baby dragon of the Red Dragonflight",
+      "abilities": [
+        {
+          "name": "Living Flame",
+          "description": "Unleashes a burst of dragonfire"
+        }
+      ]
+    },
+    "pet2": {
+      "name": "Mechanical Squirrel",
+      "description": "A mechanical squirrel that collects nuts and bolts",
+      "abilities": [
+        {
+          "name": "Wind-Up",
+          "description": "Increases speed and efficiency"
+        }
+      ]
+    }
+  }'
 ```
 
 Generate an image prompt:
@@ -90,7 +113,23 @@ Generate an image prompt:
 ```bash
 curl -X POST http://localhost:3000/api/prompts/image \
   -H "Content-Type: application/json" \
-  -d '{"pet":"Murkastrasza","description":"A baby dragon with magenta-red scales"}'
+  -d '{
+    "petId": 39,
+    "imageSource": "warcraftpets_images",
+    "artStyle": "chibi"
+  }'
+```
+
+Batch generate image prompts:
+
+```bash
+curl -X POST http://localhost:3000/api/prompts/image/batch \
+  -H "Content-Type: application/json" \
+  -d '{
+    "batchSize": 10,
+    "imageSource": "warcraftpets_images",
+    "artStyle": "chibi"
+  }'
 ```
 
 ## API Documentation
@@ -128,6 +167,23 @@ The application uses the following main tables:
 
 1. `blizzard_pets`: Stores detailed pet information from Blizzard's API
 2. `warcraftpets_images`: Stores pet image URLs and page references from Warcraftpets.com
+3. `prompts_art_styles`: Stores art style templates for image generation
+4. `app_prompts_pet_image`: Stores generated image prompts with metadata
+
+## Code Standards
+
+This project follows strict coding standards:
+
+-   TypeScript for all code files
+-   Express.js best practices
+-   Comprehensive error handling
+-   Input validation
+-   Organized route structure
+-   Environment-based configuration
+-   Detailed API documentation
+-   RESTful conventions
+-   Consistent code style
+-   Async/await for asynchronous operations
 
 ## License
 
