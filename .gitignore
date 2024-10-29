@@ -1,4 +1,3 @@
 node_modules/
-cline/
-db/
+db/mrgll-me.sqlite3
 .env
