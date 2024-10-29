@@ -1,0 +1,3 @@
+node_modules/
+db/mrgll-me.sqlite3
+.env
