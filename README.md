@@ -8,6 +8,7 @@ A TypeScript/Node.js application that fetches and stores World of Warcraft battl
 -   Stores detailed pet information in a SQLite database (development) or PostgreSQL (production)
 -   Automatic OAuth token management using client credentials
 -   TypeScript for type safety and better developer experience
+-   Batch scraping of pet images from Warcraftpets.com with configurable limits
 
 ## Prerequisites
 
@@ -95,6 +96,13 @@ npm run watch-ts
 -   Run migrations: `npx knex migrate:latest`
 -   Rollback migrations: `npx knex migrate:rollback`
 -   Create new migration: `npx knex migrate:make migration_name`
+
+### Tables
+
+The application uses the following main tables:
+
+1. `blizzard_pets`: Stores detailed pet information from Blizzard's API
+2. `warcraftpets_images`: Stores pet image URLs and page references from Warcraftpets.com
 
 ## License
 
