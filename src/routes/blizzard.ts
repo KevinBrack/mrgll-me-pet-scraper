@@ -5,12 +5,27 @@ import blizzardService from "../services/blizzard";
 const router = express.Router();
 
 router.get("/pets", async (req: Request, res: Response) => {
+    const startTime = Date.now();
+    console.log("\n=== Starting Pet Data Update Process ===");
+    console.log(`Time: ${new Date().toISOString()}`);
+
     try {
         // Set a longer timeout since we're processing a lot of data
         res.setTimeout(300000); // 5 minutes
 
         // Get the list of pets
+        console.log("Fetching pet list from Blizzard API...");
         const petsList = await blizzardService.getPetsList();
+        const totalPets = petsList.pets.length;
+        console.log(`Found ${totalPets} pets in Blizzard API`);
+
+        // Check existing pets count
+        const existingPetsCount = await db("blizzard_pets")
+            .count("* as count")
+            .first();
+        console.log(
+            `Current database has ${existingPetsCount?.count || 0} pets`
+        );
 
         // Send initial response
         res.writeHead(200, {
@@ -20,11 +35,55 @@ router.get("/pets", async (req: Request, res: Response) => {
 
         // Process each pet
         let processedCount = 0;
-        const totalPets = petsList.pets.length;
+        let newPetsCount = 0;
+        let lastLoggedPercentage = 0;
+
+        console.log("\n--- Beginning Pet Processing ---");
 
         for (const pet of petsList.pets) {
             try {
-                // Get detailed information
+                // Check if pet already exists in database
+                const existingPet = await db("blizzard_pets")
+                    .where({ id: pet.id })
+                    .first();
+
+                if (existingPet) {
+                    processedCount++;
+                    // Send progress update for skipped pets
+                    res.write(
+                        JSON.stringify({
+                            status: "processing",
+                            processed: processedCount,
+                            total: totalPets,
+                            current: existingPet.name,
+                            percentage: Math.round(
+                                (processedCount / totalPets) * 100
+                            ),
+                            skipped: true,
+                        }) + "\n"
+                    );
+
+                    // Log progress at every 25%
+                    const currentPercentage = Math.floor(
+                        (processedCount / totalPets) * 100
+                    );
+                    if (currentPercentage >= lastLoggedPercentage + 25) {
+                        lastLoggedPercentage = currentPercentage;
+                        console.log(
+                            `Progress: ${currentPercentage}% (${processedCount}/${totalPets} pets processed)`
+                        );
+                        console.log(
+                            `Time elapsed: ${(
+                                (Date.now() - startTime) /
+                                1000
+                            ).toFixed(2)} seconds`
+                        );
+                    }
+
+                    continue;
+                }
+
+                // Get detailed information only for new pets
                 const details = await blizzardService.getPetDetails(pet.id);
                 const media = await blizzardService.getPetMedia(pet.id);
 
@@ -58,13 +117,14 @@ router.get("/pets", async (req: Request, res: Response) => {
                     media_assets: JSON.stringify(media.assets || []),
                 };
 
-                // Insert or update the pet in the database
-                await db("blizzard_pets")
-                    .insert(petData)
-                    .onConflict("id")
-                    .merge();
+                // Insert the new pet in the database
+                await db("blizzard_pets").insert(petData);
 
                 processedCount++;
+                newPetsCount++;
+                console.log(
+                    `Added new pet: ${details.name} (ID: ${details.id})`
+                );
 
                 // Send progress update
                 res.write(
@@ -76,6 +136,7 @@ router.get("/pets", async (req: Request, res: Response) => {
                         percentage: Math.round(
                             (processedCount / totalPets) * 100
                         ),
+                        new: true,
                     }) + "\n"
                 );
             } catch (error) {
@@ -85,17 +146,39 @@ router.get("/pets", async (req: Request, res: Response) => {
             }
         }
 
+        const endTime = Date.now();
+        const totalTimeSeconds = ((endTime - startTime) / 1000).toFixed(2);
+
+        console.log("\n=== Pet Data Update Process Complete ===");
+        console.log(`Total time: ${totalTimeSeconds} seconds`);
+        console.log(`Total pets processed: ${processedCount}`);
+        console.log(`New pets added: ${newPetsCount}`);
+        console.log(
+            `Skipped (already exists): ${processedCount - newPetsCount}`
+        );
+        console.log("=====================================\n");
+
         // Send final success response
         res.end(
             JSON.stringify({
                 status: "complete",
                 message: "Pet data successfully updated",
-                count: processedCount,
+                processed: processedCount,
+                newPetsAdded: newPetsCount,
                 total: totalPets,
+                timeElapsed: `${totalTimeSeconds} seconds`,
             })
         );
     } catch (error) {
         console.error("Error fetching pets:", error);
+        console.log("\n=== Pet Data Update Process Failed ===");
+        console.log(
+            `Time elapsed: ${((Date.now() - startTime) / 1000).toFixed(
+                2
+            )} seconds`
+        );
+        console.log("=====================================\n");
+
         if (!res.headersSent) {
             res.status(500).json({ error: "Failed to fetch and store pets" });
         } else {

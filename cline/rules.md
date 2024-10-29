@@ -11,5 +11,3 @@
 9. Use async/await for asynchronous operations
 10. Follow RESTful conventions
 11. Maintain consistent code style
-
-Note to Cline: The development server is already running on port 3000. Do not attempt to start it again after making changes.

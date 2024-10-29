@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import blizzardRouter from "./routes/blizzard";
+import warcraftPetsRouter from "./routes/warcraftpets";
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/blizzard", blizzardRouter);
+app.use("/api/warcraftpets", warcraftPetsRouter);
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
