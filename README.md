@@ -1,6 +1,6 @@
 # MRGLL.ME Pet Scraper
 
-A TypeScript/Node.js application that fetches and stores World of Warcraft battle pet data from the Blizzard API.
+A TypeScript/Node.js application that fetches and stores World of Warcraft battle pet data from the Blizzard API, with AI-powered content generation capabilities.
 
 ## Features
 
@@ -9,19 +9,23 @@ A TypeScript/Node.js application that fetches and stores World of Warcraft battl
 -   Automatic OAuth token management using client credentials
 -   TypeScript for type safety and better developer experience
 -   Batch scraping of pet images from Warcraftpets.com with configurable limits
+-   AI-powered content generation through OpenRouter API:
+    -   Dynamic battle narratives between pets
+    -   Detailed image prompts for pet visualizations
 
 ## Prerequisites
 
 -   Node.js (v14 or higher)
 -   npm or yarn
 -   SQLite (development) or PostgreSQL (production)
+-   OpenRouter API key for AI content generation
 
 ## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/mrgll-me-pet-scraper.git
+git clone https://github.com/KevinBrack/mrgll-me-pet-scraper.git
 cd mrgll-me-pet-scraper
 ```
 
@@ -43,6 +47,9 @@ cp .env.example .env
 # Required Blizzard API credentials
 BLIZZARD_CLIENT_ID=your_client_id
 BLIZZARD_CLIENT_SECRET=your_client_secret
+
+# Required OpenRouter API key
+OPENROUTER_API_KEY=your_openrouter_api_key
 
 # Optional database configuration for production
 DATABASE_URL=postgresql://username:password@localhost:5432/mrgll-me
@@ -67,6 +74,24 @@ npm start
 ```
 
 2. The server will run on port 3000 by default.
+
+### Content Generation Examples
+
+Generate a battle narrative:
+
+```bash
+curl -X POST http://localhost:3000/api/prompts/narrative \
+  -H "Content-Type: application/json" \
+  -d '{"pet1":"Murkastrasza","pet2":"Stinker","ability":"Living Flame"}'
+```
+
+Generate an image prompt:
+
+```bash
+curl -X POST http://localhost:3000/api/prompts/image \
+  -H "Content-Type: application/json" \
+  -d '{"pet":"Murkastrasza","description":"A baby dragon with magenta-red scales"}'
+```
 
 ## API Documentation
 
