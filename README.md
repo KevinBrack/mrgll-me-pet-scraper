@@ -22,7 +22,7 @@ A TypeScript/Node.js application that fetches and stores World of Warcraft battl
 -   SQLite (development) or PostgreSQL (production)
 -   OpenRouter API key for AI content generation
 
-## Installation
+## Development Setup
 
 1. Clone the repository:
 
@@ -61,11 +61,35 @@ DB_USER=username
 DB_PASSWORD=password
 ```
 
-5. Run database migrations:
+5. Initialize development database:
 
 ```bash
-npx knex migrate:latest
+npm run init-dev-db
 ```
+
+This will:
+- Check if a database already exists
+- Run all migrations
+- Seed the database with initial data
+
+## Initial Seed Data
+
+The development database comes pre-populated with five carefully selected pets, each with complete data including Blizzard info, Warcraftpets images, and AI-generated image prompts:
+
+1. **Mechanical Squirrel** (ID: 39)
+   - The original battle pet engineer who thinks nuts and bolts count as trail mix
+
+2. **Bombay Cat** (ID: 40)
+   - Has a retirement plan that involves being buried with royalty... talk about career goals!
+
+3. **Cornish Rex Cat** (ID: 41)
+   - Attends tea parties but prefers to drink the tears of its enemies... how very sophisticated
+
+4. **Black Tabby Cat** (ID: 42)
+   - Lives by the motto "nine lives to live, one life to give" - we're still not sure what that means
+
+5. **Orange Tabby Cat** (ID: 43)
+   - The reason your furniture can't have nice things
 
 ## Usage
 
@@ -76,61 +100,6 @@ npm start
 ```
 
 2. The server will run on port 3000 by default.
-
-### Content Generation Examples
-
-Generate a battle narrative:
-
-```bash
-curl -X POST http://localhost:3000/api/prompts/narrative \
-  -H "Content-Type: application/json" \
-  -d '{
-    "pet1": {
-      "name": "Murkastrasza",
-      "description": "A baby dragon of the Red Dragonflight",
-      "abilities": [
-        {
-          "name": "Living Flame",
-          "description": "Unleashes a burst of dragonfire"
-        }
-      ]
-    },
-    "pet2": {
-      "name": "Mechanical Squirrel",
-      "description": "A mechanical squirrel that collects nuts and bolts",
-      "abilities": [
-        {
-          "name": "Wind-Up",
-          "description": "Increases speed and efficiency"
-        }
-      ]
-    }
-  }'
-```
-
-Generate an image prompt:
-
-```bash
-curl -X POST http://localhost:3000/api/prompts/image \
-  -H "Content-Type: application/json" \
-  -d '{
-    "petId": 39,
-    "imageSource": "warcraftpets_images",
-    "artStyle": "chibi"
-  }'
-```
-
-Batch generate image prompts:
-
-```bash
-curl -X POST http://localhost:3000/api/prompts/image/batch \
-  -H "Content-Type: application/json" \
-  -d '{
-    "batchSize": 10,
-    "imageSource": "warcraftpets_images",
-    "artStyle": "chibi"
-  }'
-```
 
 ## API Documentation
 
