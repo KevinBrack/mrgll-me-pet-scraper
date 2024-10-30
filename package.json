@@ -10,7 +10,9 @@
         "migrate-up": "knex migrate:latest",
         "migrate-down": "knex migrate:rollback",
         "seed": "knex seed:run",
-        "migrate-make": "knex migrate:make"
+        "migrate-make": "knex migrate:make",
+        "check-db": "node scripts/check-db.js",
+        "init-dev-db": "npm run check-db && npm run migrate-up && npm run seed"
     },
     "keywords": [],
     "author": "",
