@@ -135,14 +135,14 @@ Remember:
                     messages: [
                         {
                             role: "user",
-                            content: `Create a character-focused image generation prompt that captures the essence of this creature in generic fantasy terms.
+                            content: `Create a character-focused image generation prompt based on this description. Return ONLY a JSON object with a single "prompt" field containing your response.
 
 Original description to adapt: ${description}
 
-Create a prompt that:
-1. Translates any game-specific elements into generic fantasy equivalents
-2. Focuses purely on visual characteristics and personality
-3. Uses the following art style: ${artStyle.description}
+The prompt should:
+1. Translate game-specific elements into generic fantasy equivalents
+2. Focus purely on visual characteristics and personality
+3. Use this art style: ${artStyle.description}
 
 Focus ONLY on these elements:
 - Physical features and proportions (size, shape, distinctive characteristics)
@@ -152,15 +152,15 @@ Focus ONLY on these elements:
 - Pose and character presentation
 
 Important guidelines:
-- Do NOT include any game-specific references or terminology
-- Do NOT include any background elements or environment
-- Keep descriptions focused on universal fantasy elements
-- Maintain the character's essence while using generic terms
+- NO game-specific references or terminology
+- NO background elements or environment
+- Use universal fantasy elements
+- Maintain character essence with generic terms
 
-Example structure:
-"A diminutive magical dragon with shimmering magenta scales, wearing ornate golden armor pieces. The creature's large, expressive golden eyes and playful expression convey a sense of mischief. Ethereal purple energy radiates from its form, creating a soft glow that highlights its polished, metallic accents..."
-
-Remember: The goal is to create a prompt that maintains the character's core visual identity in a generic fantasy context.`,
+Example response format:
+{
+    "prompt": "A diminutive magical dragon with shimmering magenta scales, wearing ornate golden armor pieces. The creature's large, expressive golden eyes and playful expression convey a sense of mischief. Ethereal purple energy radiates from its form, creating a soft glow that highlights its polished, metallic accents."
+}`,
                         },
                     ],
                     temperature: 0.25,
@@ -170,7 +170,15 @@ Remember: The goal is to create a prompt that maintains the character's core vis
                 { headers: this.headers }
             );
 
-            return response.data.choices[0].message.content;
+            // Parse the JSON response from Claude
+            const content = response.data.choices[0].message.content;
+            try {
+                const parsedContent = JSON.parse(content);
+                return parsedContent.prompt;
+            } catch (parseError) {
+                console.error("Error parsing image prompt JSON:", parseError);
+                throw new Error("Failed to parse image prompt response");
+            }
         } catch (error) {
             console.error("Error generating image prompt:", error);
             throw new Error("Failed to generate image prompt");
