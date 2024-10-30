@@ -2,3 +2,5 @@ node_modules/
 db/mrgll-me.sqlite3
 .env
 .github
+dist/
+cline/aeris.md

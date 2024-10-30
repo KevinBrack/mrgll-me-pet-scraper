@@ -113,9 +113,12 @@ class WarcraftPetsService {
     }
 
     async scrapePets(limit: number = 10) {
-        try {
-            console.log(`Starting batch scrape for ${limit} pets...`);
+        const startTime = Date.now();
+        console.log("\n=== Starting Batch Pet Image Scrape ===");
+        console.log(`Time: ${new Date().toISOString()}`);
+        console.log(`Requested Limit: ${limit} pets`);
 
+        try {
             // Find pets that don't have images yet
             const petsToScrape = await db("blizzard_pets")
                 .whereNotExists(function () {
@@ -130,12 +133,15 @@ class WarcraftPetsService {
             console.log(`Found ${petsToScrape.length} pets to scrape`);
 
             const results = [];
+            let successCount = 0;
+            let errorCount = 0;
+
             for (const pet of petsToScrape) {
                 try {
                     const result = await this.scrapePetById(pet.id);
                     results.push(result);
-                    // Add delay between pets to avoid rate limiting
-                    // await this.delay(2000);
+                    successCount++;
+                    console.log(`Successfully scraped: ${pet.name} (ID: ${pet.id})`);
                 } catch (err) {
                     const error = err as Error;
                     console.error(`Error scraping pet ${pet.id}:`, error);
@@ -144,15 +150,39 @@ class WarcraftPetsService {
                         pet_id: pet.id,
                         message: error.message,
                     });
+                    errorCount++;
                 }
             }
 
+            const endTime = Date.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+            console.log("\n=== Batch Pet Image Scrape Complete ===");
+            console.log(`Time Elapsed: ${duration} seconds`);
+            console.log(`Total Processed: ${petsToScrape.length}`);
+            console.log(`Successful: ${successCount}`);
+            console.log(`Failed: ${errorCount}`);
+            console.log("=====================================\n");
+
             return {
                 message: `Batch scrape completed for ${results.length} pets`,
+                stats: {
+                    total: petsToScrape.length,
+                    successful: successCount,
+                    failed: errorCount,
+                    timeElapsed: `${duration} seconds`
+                },
                 results,
             };
         } catch (error) {
+            const endTime = Date.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+            
             console.error("Error in scrapePets:", error);
+            console.log("\n=== Batch Pet Image Scrape Failed ===");
+            console.log(`Time Elapsed: ${duration} seconds`);
+            console.log("=====================================\n");
+            
             throw error;
         }
     }

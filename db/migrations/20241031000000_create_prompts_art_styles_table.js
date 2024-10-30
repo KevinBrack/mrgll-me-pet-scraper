@@ -7,6 +7,7 @@ exports.up = function (knex) {
         table.increments("id").primary();
         table.string("name").notNullable().unique();
         table.text("description").notNullable();
+        table.text("base_prompt").notNullable();
         table.timestamps(true, true);
     });
 };

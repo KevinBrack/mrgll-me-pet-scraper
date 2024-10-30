@@ -12,3 +12,11 @@
 10. Follow RESTful conventions
 11. Maintain consistent code style
 12. Repository must be at https://github.com/KevinBrack/mrgll-me-pet-scraper
+13. In database operations, only delete data you are explicitly replacing
+14. Commit code when:
+    - New feature is working
+    - Tests are passing
+    - Bug is fixed
+    - Database changes are verified
+    - Configuration is updated
+    - Documentation is added/updated
