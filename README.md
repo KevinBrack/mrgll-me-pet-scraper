@@ -76,20 +76,13 @@ This will:
 
 The development database comes pre-populated with five carefully selected pets, each with complete data including Blizzard info, Warcraftpets images, and AI-generated image prompts:
 
-1. **Mechanical Squirrel** (ID: 39)
-   - The original battle pet engineer who thinks nuts and bolts count as trail mix
-
-2. **Bombay Cat** (ID: 40)
-   - Has a retirement plan that involves being buried with royalty... talk about career goals!
-
-3. **Cornish Rex Cat** (ID: 41)
-   - Attends tea parties but prefers to drink the tears of its enemies... how very sophisticated
-
-4. **Black Tabby Cat** (ID: 42)
-   - Lives by the motto "nine lives to live, one life to give" - we're still not sure what that means
-
-5. **Orange Tabby Cat** (ID: 43)
-   - The reason your furniture can't have nice things
+| ID | Name | Description |
+|----|------|-------------|
+| 39 | Mechanical Squirrel | The original battle pet engineer who thinks nuts and bolts count as trail mix |
+| 40 | Bombay Cat | Has a retirement plan that involves being buried with royalty... talk about career goals! |
+| 41 | Cornish Rex Cat | Attends tea parties but prefers to drink the tears of its enemies... how very sophisticated |
+| 42 | Black Tabby Cat | Lives by the motto "nine lives to live, one life to give" - we're still not sure what that means |
+| 43 | Orange Tabby Cat | The reason your furniture can't have nice things |
 
 ## Usage
 
