@@ -1,6 +1,6 @@
-import express from "express";
-import openRouterService from "../services/openrouter";
-import db from "../db/config";
+import express from 'express';
+import openRouterService from '../services/openrouter';
+import db from '../db/config';
 
 const router = express.Router();
 
@@ -33,7 +33,7 @@ interface BatchGenerateImagePromptsRequest {
 }
 
 // Generate a battle narrative
-router.post("/narrative", async (req, res) => {
+router.post('/narrative', async (req, res) => {
     try {
         const { pet1, pet2 } = req.body as GenerateNarrativeRequest;
 
@@ -47,94 +47,83 @@ router.post("/narrative", async (req, res) => {
             !pet2?.abilities?.length
         ) {
             return res.status(400).json({
-                error: "Missing required fields: Both pets must include name, description, and abilities",
+                error: 'Missing required fields: Both pets must include name, description, and abilities',
             });
         }
 
-        const narrativeResponse =
-            await openRouterService.generateBattleNarrative(pet1, pet2);
+        const narrativeResponse = await openRouterService.generateBattleNarrative(pet1, pet2);
 
         res.json(narrativeResponse);
     } catch (error) {
-        console.error("Error in narrative generation:", error);
+        console.error('Error in narrative generation:', error);
         res.status(500).json({
-            error: "Failed to generate battle narrative",
+            error: 'Failed to generate battle narrative',
         });
     }
 });
 
 // Generate an image prompt
-router.post("/image", async (req, res) => {
+router.post('/image', async (req, res) => {
     try {
-        console.log("Received image prompt request:", req.body);
+        console.log('Received image prompt request:', req.body);
         const {
             petId,
-            imageSource = "warcraftpets_images",
-            artStyle = "chibi",
+            imageSource = 'warcraftpets_images',
+            artStyle = 'chibi',
         } = req.body as GenerateImagePromptRequest;
 
         // Input validation
         if (!petId) {
-            console.log("Missing petId in request");
+            console.log('Missing petId in request');
             return res.status(400).json({
-                error: "Missing required field: petId is required",
+                error: 'Missing required field: petId is required',
             });
         }
 
         // Fetch pet data from blizzard_pets table
-        console.log("Fetching pet data for id:", petId);
-        const pet = await db("blizzard_pets").where({ id: petId }).first();
+        console.log('Fetching pet data for id:', petId);
+        const pet = await db('blizzard_pets').where({ id: petId }).first();
 
         if (!pet) {
-            console.log("Pet not found:", petId);
+            console.log('Pet not found:', petId);
             return res.status(404).json({
-                error: "Pet not found",
+                error: 'Pet not found',
             });
         }
-        console.log("Found pet:", pet);
+        console.log('Found pet:', pet);
 
         // Fetch image data from specified source (default: warcraftpets_images)
-        console.log("Fetching image data from:", imageSource);
-        const imageData = await db(imageSource)
-            .where({ pet_id: petId })
-            .first();
+        console.log('Fetching image data from:', imageSource);
+        const imageData = await db(imageSource).where({ pet_id: petId }).first();
 
         if (!imageData) {
-            console.log("No image data found in", imageSource);
+            console.log('No image data found in', imageSource);
             return res.status(404).json({
                 error: `No image data found for pet in ${imageSource}`,
             });
         }
-        console.log("Found image data:", imageData);
+        console.log('Found image data:', imageData);
 
         // Fetch art style from prompts_art_styles table
-        console.log("Fetching art style:", artStyle);
-        const artStyleData = await db("prompts_art_styles")
-            .where({ name: artStyle })
-            .first();
+        console.log('Fetching art style:', artStyle);
+        const artStyleData = await db('prompts_art_styles').where({ name: artStyle }).first();
 
         if (!artStyleData) {
-            console.log("Art style not found:", artStyle);
+            console.log('Art style not found:', artStyle);
             return res.status(404).json({
                 error: `Art style '${artStyle}' not found`,
             });
         }
-        console.log("Found art style:", artStyleData);
+        console.log('Found art style:', artStyleData);
 
         // Generate the image prompt using the pet description and art style
-        console.log(
-            "Generating image prompt with description:",
-            pet.description
-        );
-        const imagePrompt = await openRouterService.generateImagePrompt(
-            pet.description,
-            artStyle
-        );
-        console.log("Generated image prompt:", imagePrompt);
+        console.log('Generating image prompt with description:', pet.description);
+        const imagePrompt = await openRouterService.generateImagePrompt(pet.description, artStyle);
+        console.log('Generated image prompt:', imagePrompt);
 
         // Store the generated prompt and related data
-        console.log("Storing prompt record...");
-        const [promptRecord] = await db("app_prompts_pet_image")
+        console.log('Storing prompt record...');
+        const [promptRecord] = await db('app_prompts_pet_image')
             .insert({
                 pet_id: petId,
                 art_style_id: artStyleData.id,
@@ -148,8 +137,8 @@ router.post("/image", async (req, res) => {
                     source_pet_url: imageData.pet_url,
                 }),
             })
-            .returning("*");
-        console.log("Stored prompt record:", promptRecord);
+            .returning('*');
+        console.log('Stored prompt record:', promptRecord);
 
         res.json({
             imagePrompt,
@@ -159,26 +148,26 @@ router.post("/image", async (req, res) => {
             promptRecord,
         });
     } catch (error) {
-        console.error("Error in image prompt generation:", error);
+        console.error('Error in image prompt generation:', error);
         if (error instanceof Error) {
-            console.error("Error details:", error.message);
-            console.error("Error stack:", error.stack);
+            console.error('Error details:', error.message);
+            console.error('Error stack:', error.stack);
         }
         res.status(500).json({
-            error: "Failed to generate image prompt",
+            error: 'Failed to generate image prompt',
         });
     }
 });
 
 // Batch generate image prompts
-router.post("/image/batch", async (req, res) => {
+router.post('/image/batch', async (req, res) => {
     try {
-        console.log("\n=== Starting Batch Processing ===");
-        console.log("Received batch image prompt request:", req.body);
+        console.log('\n=== Starting Batch Processing ===');
+        console.log('Received batch image prompt request:', req.body);
         const {
             batchSize = 10,
-            imageSource = "warcraftpets_images",
-            artStyle = "chibi",
+            imageSource = 'warcraftpets_images',
+            artStyle = 'chibi',
         } = req.body as BatchGenerateImagePromptsRequest;
 
         console.log(`Configuration:
@@ -187,10 +176,8 @@ router.post("/image/batch", async (req, res) => {
 - Art Style: ${artStyle}`);
 
         // Fetch art style data
-        console.log("\nFetching art style data...");
-        const artStyleData = await db("prompts_art_styles")
-            .where({ name: artStyle })
-            .first();
+        console.log('\nFetching art style data...');
+        const artStyleData = await db('prompts_art_styles').where({ name: artStyle }).first();
 
         if (!artStyleData) {
             console.log(`Error: Art style '${artStyle}' not found`);
@@ -198,41 +185,33 @@ router.post("/image/batch", async (req, res) => {
                 error: `Art style '${artStyle}' not found`,
             });
         }
-        console.log("Art style found:", artStyleData.name);
+        console.log('Art style found:', artStyleData.name);
 
         // Get pets that have images in the source table but no prompts yet
-        console.log("\nQuerying for unprocessed pets...");
+        console.log('\nQuerying for unprocessed pets...');
         const petsToProcess = await db(imageSource)
-            .select(
-                `${imageSource}.*`,
-                "blizzard_pets.description",
-                "blizzard_pets.name"
-            )
-            .join("blizzard_pets", `${imageSource}.pet_id`, "blizzard_pets.id")
-            .leftJoin("app_prompts_pet_image", function () {
-                this.on(
-                    "app_prompts_pet_image.pet_id",
-                    "=",
-                    `${imageSource}.pet_id`
-                )
+            .select(`${imageSource}.*`, 'blizzard_pets.description', 'blizzard_pets.name')
+            .join('blizzard_pets', `${imageSource}.pet_id`, 'blizzard_pets.id')
+            .leftJoin('app_prompts_pet_image', function () {
+                this.on('app_prompts_pet_image.pet_id', '=', `${imageSource}.pet_id`)
                     .andOn(
-                        "app_prompts_pet_image.art_style_id",
-                        "=",
-                        db.raw("?", [artStyleData.id])
+                        'app_prompts_pet_image.art_style_id',
+                        '=',
+                        db.raw('?', [artStyleData.id])
                     )
                     .andOn(
-                        "app_prompts_pet_image.image_source_table",
-                        "=",
-                        db.raw("?", [imageSource])
+                        'app_prompts_pet_image.image_source_table',
+                        '=',
+                        db.raw('?', [imageSource])
                     );
             })
-            .whereNull("app_prompts_pet_image.id")
+            .whereNull('app_prompts_pet_image.id')
             .limit(batchSize);
 
         console.log(`Found ${petsToProcess.length} pets to process`);
 
         if (petsToProcess.length === 0) {
-            console.log("No pets found needing processing");
+            console.log('No pets found needing processing');
             return res.json({
                 processed: 0,
                 successful: 0,
@@ -241,7 +220,7 @@ router.post("/image/batch", async (req, res) => {
             });
         }
 
-        console.log("\n=== Beginning Pet Processing ===");
+        console.log('\n=== Beginning Pet Processing ===');
         const results = [];
         let current = 1;
         for (const petData of petsToProcess) {
@@ -250,15 +229,15 @@ router.post("/image/batch", async (req, res) => {
             console.log(`- Name: ${petData.name}`);
 
             try {
-                console.log("Generating image prompt...");
+                console.log('Generating image prompt...');
                 const imagePrompt = await openRouterService.generateImagePrompt(
                     petData.description,
                     artStyle
                 );
-                console.log("Prompt generated successfully");
+                console.log('Prompt generated successfully');
 
-                console.log("Storing prompt record...");
-                const [promptRecord] = await db("app_prompts_pet_image")
+                console.log('Storing prompt record...');
+                const [promptRecord] = await db('app_prompts_pet_image')
                     .insert({
                         pet_id: petData.pet_id,
                         art_style_id: artStyleData.id,
@@ -272,8 +251,8 @@ router.post("/image/batch", async (req, res) => {
                             source_pet_url: petData.pet_url,
                         }),
                     })
-                    .returning("*");
-                console.log("Record stored successfully");
+                    .returning('*');
+                console.log('Record stored successfully');
 
                 results.push({
                     success: true,
@@ -281,21 +260,21 @@ router.post("/image/batch", async (req, res) => {
                     pet_name: petData.name,
                     promptRecord,
                 });
-                console.log("Pet processing completed successfully");
+                console.log('Pet processing completed successfully');
             } catch (error) {
                 console.error(`Error processing pet ${petData.pet_id}:`, error);
                 results.push({
                     success: false,
                     pet_id: petData.pet_id,
                     pet_name: petData.name,
-                    error: "Failed to generate or store prompt",
+                    error: 'Failed to generate or store prompt',
                 });
-                console.log("Pet processing failed");
+                console.log('Pet processing failed');
             }
             current++;
         }
 
-        console.log("\n=== Batch Processing Complete ===");
+        console.log('\n=== Batch Processing Complete ===');
         console.log(`Processed: ${results.length}`);
         console.log(`Successful: ${results.filter((r) => r.success).length}`);
         console.log(`Failed: ${results.filter((r) => !r.success).length}`);
@@ -307,9 +286,9 @@ router.post("/image/batch", async (req, res) => {
             results,
         });
     } catch (error) {
-        console.error("Error in batch image prompt generation:", error);
+        console.error('Error in batch image prompt generation:', error);
         res.status(500).json({
-            error: "Failed to process batch",
+            error: 'Failed to process batch',
         });
     }
 });

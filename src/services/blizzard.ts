@@ -1,13 +1,24 @@
-import axios from "axios";
-import {
-    PetsListResponse,
-    PetDetailsResponse,
-    PetMediaDetails,
-} from "../types/blizzard";
+import axios from 'axios';
+import { PetsListResponse, PetDetailsResponse, PetMediaDetails } from '../types/blizzard';
 
 interface TokenResponse {
     access_token: string;
     expires_in: number;
+}
+
+interface AxiosErrorResponse {
+    response?: {
+        data?: unknown;
+    };
+}
+
+function isAxiosError(error: unknown): error is AxiosErrorResponse {
+    return (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as AxiosErrorResponse).response === 'object'
+    );
 }
 
 class BlizzardService {
@@ -21,11 +32,11 @@ class BlizzardService {
         }
 
         try {
-            console.log("Attempting to get Blizzard access token...");
+            console.log('Attempting to get Blizzard access token...');
             const response = await axios.post<TokenResponse>(
-                "https://us.battle.net/oauth/token",
+                'https://us.battle.net/oauth/token',
                 new URLSearchParams({
-                    grant_type: "client_credentials",
+                    grant_type: 'client_credentials',
                 }),
                 {
                     auth: {
@@ -37,21 +48,18 @@ class BlizzardService {
 
             this.accessToken = response.data.access_token;
             this.tokenExpiration = Date.now() + response.data.expires_in * 1000;
-            console.log("Successfully obtained access token");
+            console.log('Successfully obtained access token');
             return this.accessToken;
-        } catch (error: any) {
-            console.error("Error getting Blizzard access token:", {
-                message: error.message,
-                response: error.response?.data,
+        } catch (error) {
+            console.error('Error getting Blizzard access token:', {
+                message: error instanceof Error ? error.message : 'Unknown error',
+                response: isAxiosError(error) ? error.response?.data : undefined,
             });
-            throw new Error("Failed to get access token");
+            throw new Error('Failed to get access token');
         }
     }
 
-    private async makeRequest<T>(
-        url: string,
-        params: Record<string, string> = {}
-    ): Promise<T> {
+    private async makeRequest<T>(url: string, params: Record<string, string> = {}): Promise<T> {
         try {
             console.log(`Making request to: ${url}`);
             const token = await this.getAccessToken();
@@ -65,22 +73,22 @@ class BlizzardService {
             });
             console.log(`Successfully received response from: ${url}`);
             return response.data;
-        } catch (error: any) {
+        } catch (error) {
             console.error(`Error making request to ${url}:`, {
-                message: error.message,
-                response: error.response?.data,
+                message: error instanceof Error ? error.message : 'Unknown error',
+                response: isAxiosError(error) ? error.response?.data : undefined,
             });
             throw error;
         }
     }
 
     async getPetsList(): Promise<PetsListResponse> {
-        console.log("Fetching pets list...");
+        console.log('Fetching pets list...');
         return this.makeRequest<PetsListResponse>(
-            "https://us.api.blizzard.com/data/wow/pet/index",
+            'https://us.api.blizzard.com/data/wow/pet/index',
             {
-                namespace: "static-us",
-                locale: "en_US",
+                namespace: 'static-us',
+                locale: 'en_US',
             }
         );
     }
@@ -90,8 +98,8 @@ class BlizzardService {
         return this.makeRequest<PetDetailsResponse>(
             `https://us.api.blizzard.com/data/wow/pet/${petId}`,
             {
-                namespace: "static-us",
-                locale: "en_US",
+                namespace: 'static-us',
+                locale: 'en_US',
             }
         );
     }
@@ -101,8 +109,8 @@ class BlizzardService {
         return this.makeRequest<PetMediaDetails>(
             `https://us.api.blizzard.com/data/wow/media/pet/${petId}`,
             {
-                namespace: "static-us",
-                locale: "en_US",
+                namespace: 'static-us',
+                locale: 'en_US',
             }
         );
     }
