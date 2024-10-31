@@ -51,27 +51,39 @@
 
 ## 3. AI Generation Costs
 
+### Initial Budget Allocation
+- OpenRouter (Claude): $30 initial budget
+  - Used for pet descriptions and battle narratives
+  - Generates DALL-E prompts
+  - Primary content generation service
+
+- DALL-E: $50 initial budget
+  - Battle scene generation
+  - Visual content creation
+  - Most likely to exhaust first
+
 ### Considerations
-- OpenAI API pricing
-- Image generation costs
+- OpenRouter API pricing
+- DALL-E image generation costs
 - Rate limits and quotas
+- Graceful degradation when credits exhaust
 
 ### Questions to Answer
 1. **Story Generation**
-   - Which GPT model to use?
    - Average tokens per story?
    - Expected stories per day?
    - Retry strategy costs?
+   - Fallback messaging?
 
 2. **Image Generation**
-   - Which model/service to use?
    - Image size and quality needs?
    - Generation attempts per battle?
-   - Fallback strategy?
+   - Fallback strategy when credits exhaust?
+   - User communication plan?
 
 3. **Cost Control**
    - How to implement rate limiting?
-   - What's our monthly budget cap?
+   - What's our credit alert thresholds?
    - How to handle usage spikes?
    - Can we cache/reuse generations?
 
