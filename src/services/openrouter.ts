@@ -1,15 +1,15 @@
-import axios from "axios";
-import dotenv from "dotenv";
-import { getArtStyle } from "../db/prompts";
+import axios from 'axios';
+import dotenv from 'dotenv';
+import { getArtStyle } from '../db/prompts';
 
 dotenv.config();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
-const DEFAULT_ART_STYLE = "chibi";
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const DEFAULT_ART_STYLE = 'chibi';
 
 if (!OPENROUTER_API_KEY) {
-    throw new Error("OPENROUTER_API_KEY is required");
+    throw new Error('OPENROUTER_API_KEY is required');
 }
 
 interface OpenRouterResponse {
@@ -43,36 +43,29 @@ class OpenRouterService {
     constructor() {
         this.headers = {
             Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-            "HTTP-Referer": "https://mrgll.me",
-            "Content-Type": "application/json",
+            'HTTP-Referer': 'https://mrgll.me',
+            'Content-Type': 'application/json',
         };
     }
 
-    async generateBattleNarrative(
-        pet1: Pet,
-        pet2: Pet
-    ): Promise<BattleNarrativeResponse> {
+    async generateBattleNarrative(pet1: Pet, pet2: Pet): Promise<BattleNarrativeResponse> {
         try {
             const response = await axios.post<OpenRouterResponse>(
                 `${OPENROUTER_BASE_URL}/chat/completions`,
                 {
-                    model: "anthropic/claude-3.5-sonnet",
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [
                         {
-                            role: "user",
+                            role: 'user',
                             content: `Create an epic World of Warcraft pet battle scene using these two pets and their abilities. Format the response in JSON with three fields:
 
 Pet 1: ${pet1.name}
 Description: ${pet1.description}
-Abilities: ${pet1.abilities
-                                .map((a) => `${a.name}: ${a.description}`)
-                                .join("\n")}
+Abilities: ${pet1.abilities.map((a) => `${a.name}: ${a.description}`).join('\n')}
 
 Pet 2: ${pet2.name}
 Description: ${pet2.description}
-Abilities: ${pet2.abilities
-                                .map((a) => `${a.name}: ${a.description}`)
-                                .join("\n")}
+Abilities: ${pet2.abilities.map((a) => `${a.name}: ${a.description}`).join('\n')}
 
 Create a response in this format:
 {
@@ -105,15 +98,12 @@ Remember:
                     imagePrompt: parsedContent.imagePrompt,
                 };
             } catch (parseError) {
-                console.error(
-                    "Error parsing battle narrative JSON:",
-                    parseError
-                );
-                throw new Error("Failed to parse battle narrative response");
+                console.error('Error parsing battle narrative JSON:', parseError);
+                throw new Error('Failed to parse battle narrative response');
             }
         } catch (error) {
-            console.error("Error generating battle narrative:", error);
-            throw new Error("Failed to generate battle narrative");
+            console.error('Error generating battle narrative:', error);
+            throw new Error('Failed to generate battle narrative');
         }
     }
 
@@ -131,10 +121,10 @@ Remember:
             const response = await axios.post<OpenRouterResponse>(
                 `${OPENROUTER_BASE_URL}/chat/completions`,
                 {
-                    model: "anthropic/claude-3.5-sonnet",
+                    model: 'anthropic/claude-3.5-sonnet',
                     messages: [
                         {
-                            role: "user",
+                            role: 'user',
                             content: `Create a character-focused image generation prompt based on this description. Return ONLY a JSON object with a single "prompt" field containing your response.
 
 Original description to adapt: ${description}
@@ -176,12 +166,12 @@ Example response format:
                 const parsedContent = JSON.parse(content);
                 return parsedContent.prompt;
             } catch (parseError) {
-                console.error("Error parsing image prompt JSON:", parseError);
-                throw new Error("Failed to parse image prompt response");
+                console.error('Error parsing image prompt JSON:', parseError);
+                throw new Error('Failed to parse image prompt response');
             }
         } catch (error) {
-            console.error("Error generating image prompt:", error);
-            throw new Error("Failed to generate image prompt");
+            console.error('Error generating image prompt:', error);
+            throw new Error('Failed to generate image prompt');
         }
     }
 }

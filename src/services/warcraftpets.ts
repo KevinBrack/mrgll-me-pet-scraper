@@ -1,8 +1,29 @@
-import db from "../db/config";
-import puppeteer from "puppeteer";
+import db from '../db/config';
+import puppeteer from 'puppeteer';
+
+interface ScrapeResult {
+    message: string;
+    data?: {
+        pet_id: number;
+        pet_url: string;
+        pet_image_url: string;
+    };
+    error?: boolean;
+}
+
+interface BatchScrapeResult {
+    message: string;
+    stats: {
+        total: number;
+        successful: number;
+        failed: number;
+        timeElapsed: string;
+    };
+    results: ScrapeResult[];
+}
 
 class WarcraftPetsService {
-    private async delay(ms: number) {
+    private async delay(ms: number): Promise<void> {
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
 
@@ -11,11 +32,7 @@ class WarcraftPetsService {
     ): Promise<{ imageUrl: string | null; petUrl: string | null }> {
         const browser = await puppeteer.launch({
             headless: true,
-            args: [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-            ],
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
         });
 
         try {
@@ -27,21 +44,18 @@ class WarcraftPetsService {
             console.log(`Navigating to: ${petUrl}`);
 
             await page.goto(petUrl, {
-                waitUntil: "networkidle0",
+                waitUntil: 'networkidle0',
                 timeout: 30000,
             });
 
             // Wait for the image to load
-            console.log("Looking for pet image...");
-            const imageElement = await page.waitForSelector(
-                "div.imageright > img",
-                {
-                    timeout: 30000,
-                }
-            );
+            console.log('Looking for pet image...');
+            const imageElement = await page.waitForSelector('div.imageright > img', {
+                timeout: 30000,
+            });
 
             if (!imageElement) {
-                throw new Error("Image element not found");
+                throw new Error('Image element not found');
             }
 
             // Get the image URL
@@ -67,19 +81,17 @@ class WarcraftPetsService {
         }
     }
 
-    async scrapePetById(petId: number) {
+    async scrapePetById(petId: number): Promise<ScrapeResult> {
         try {
             // First check if we already have this pet's image
-            const existing = await db("warcraftpets_images")
-                .where({ pet_id: petId })
-                .first();
+            const existing = await db('warcraftpets_images').where({ pet_id: petId }).first();
 
             if (existing) {
-                return { message: "Pet image already exists", data: existing };
+                return { message: 'Pet image already exists', data: existing };
             }
 
             // Get the pet data from blizzard_pets
-            const pet = await db("blizzard_pets").where({ id: petId }).first();
+            const pet = await db('blizzard_pets').where({ id: petId }).first();
 
             if (!pet) {
                 throw new Error(`No pet found with id: ${petId}`);
@@ -100,39 +112,37 @@ class WarcraftPetsService {
                 pet_image_url: imageUrl,
             };
 
-            await db("warcraftpets_images").insert(record);
+            await db('warcraftpets_images').insert(record);
 
             return {
-                message: "Pet image record created",
+                message: 'Pet image record created',
                 data: record,
             };
         } catch (error) {
-            console.error("Error in scrapePetById:", error);
+            console.error('Error in scrapePetById:', error);
             throw error;
         }
     }
 
-    async scrapePets(limit: number = 10) {
+    async scrapePets(limit: number = 10): Promise<BatchScrapeResult> {
         const startTime = Date.now();
-        console.log("\n=== Starting Batch Pet Image Scrape ===");
+        console.log('\n=== Starting Batch Pet Image Scrape ===');
         console.log(`Time: ${new Date().toISOString()}`);
         console.log(`Requested Limit: ${limit} pets`);
 
         try {
             // Find pets that don't have images yet
-            const petsToScrape = await db("blizzard_pets")
+            const petsToScrape = await db('blizzard_pets')
                 .whereNotExists(function () {
-                    this.select("*")
-                        .from("warcraftpets_images")
-                        .whereRaw(
-                            "warcraftpets_images.pet_id = blizzard_pets.id"
-                        );
+                    this.select('*')
+                        .from('warcraftpets_images')
+                        .whereRaw('warcraftpets_images.pet_id = blizzard_pets.id');
                 })
                 .limit(limit);
 
             console.log(`Found ${petsToScrape.length} pets to scrape`);
 
-            const results = [];
+            const results: ScrapeResult[] = [];
             let successCount = 0;
             let errorCount = 0;
 
@@ -147,7 +157,6 @@ class WarcraftPetsService {
                     console.error(`Error scraping pet ${pet.id}:`, error);
                     results.push({
                         error: true,
-                        pet_id: pet.id,
                         message: error.message,
                     });
                     errorCount++;
@@ -157,12 +166,12 @@ class WarcraftPetsService {
             const endTime = Date.now();
             const duration = ((endTime - startTime) / 1000).toFixed(2);
 
-            console.log("\n=== Batch Pet Image Scrape Complete ===");
+            console.log('\n=== Batch Pet Image Scrape Complete ===');
             console.log(`Time Elapsed: ${duration} seconds`);
             console.log(`Total Processed: ${petsToScrape.length}`);
             console.log(`Successful: ${successCount}`);
             console.log(`Failed: ${errorCount}`);
-            console.log("=====================================\n");
+            console.log('=====================================\n');
 
             return {
                 message: `Batch scrape completed for ${results.length} pets`,
@@ -170,19 +179,19 @@ class WarcraftPetsService {
                     total: petsToScrape.length,
                     successful: successCount,
                     failed: errorCount,
-                    timeElapsed: `${duration} seconds`
+                    timeElapsed: `${duration} seconds`,
                 },
                 results,
             };
         } catch (error) {
             const endTime = Date.now();
             const duration = ((endTime - startTime) / 1000).toFixed(2);
-            
-            console.error("Error in scrapePets:", error);
-            console.log("\n=== Batch Pet Image Scrape Failed ===");
+
+            console.error('Error in scrapePets:', error);
+            console.log('\n=== Batch Pet Image Scrape Failed ===');
             console.log(`Time Elapsed: ${duration} seconds`);
-            console.log("=====================================\n");
-            
+            console.log('=====================================\n');
+
             throw error;
         }
     }
