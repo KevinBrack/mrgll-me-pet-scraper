@@ -101,9 +101,10 @@ npm start
 
 2. The server will run on port 3000 by default.
 
-## API Documentation
+## Documentation
 
-See [API.md](API.md) for detailed endpoint documentation.
+- [API Documentation](docs/api/overview.md) - Detailed documentation of all API endpoints
+- [Project Concept](docs/concepts/mrgll-me-concept.md) - Core concept and features of the AI-enhanced pet battle system
 
 ## Development
 
