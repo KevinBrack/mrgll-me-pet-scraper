@@ -1,4 +1,6 @@
 import express from 'express';
+import openRouterService from '../services/openrouter';
+import db from '../db/config';
 
 const router = express.Router();
 
@@ -19,10 +21,19 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Return not implemented for now
-        res.status(501).json({
-            error: 'Not implemented',
-        });
+        // Generate the image prompt using OpenRouter
+        const image_prompt = await openRouterService.generateLocationPrompt(name, description);
+
+        // Store in database
+        const [location] = await db('app_battle_locations')
+            .insert({
+                name,
+                lore: description,
+                image_prompt,
+            })
+            .returning('*');
+
+        res.json(location);
     } catch (error) {
         console.error('Error creating battle location:', error);
         res.status(500).json({
