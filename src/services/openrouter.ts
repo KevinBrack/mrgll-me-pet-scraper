@@ -26,6 +26,11 @@ interface BattleNarrativeResponse {
     imagePrompt: string;
 }
 
+interface LocationPromptResponse {
+    imagePrompt: string;
+    loreDescription: string;
+}
+
 interface PetAbility {
     name: string;
     description: string;
@@ -175,7 +180,10 @@ Example response format:
         }
     }
 
-    async generateLocationPrompt(name: string, description: string): Promise<string> {
+    async generateLocationPrompt(
+        name: string,
+        description: string
+    ): Promise<LocationPromptResponse> {
         try {
             const response = await axios.post<OpenRouterResponse>(
                 `${OPENROUTER_BASE_URL}/chat/completions`,
@@ -184,24 +192,28 @@ Example response format:
                     messages: [
                         {
                             role: 'user',
-                            content: `Create an environment-focused image generation prompt based on this location. Return ONLY a JSON object with a single "prompt" field containing your response.
+                            content: `Create a location description and image prompt based on this World of Warcraft location. Return ONLY a JSON object with two fields as shown in the example format.
 
 Location name: ${name}
-Location description: ${description}
+Original description: ${description}
 
-The prompt should:
+Create two distinct outputs:
+1. A "loreDescription" that expands the location's story into 2 paragraphs using World of Warcraft terminology and lore references
+2. An "imagePrompt" that describes the visual scene in generic fantasy terms
+
+The imagePrompt should:
 1. Translate game-specific elements into generic fantasy equivalents
 2. Focus on environmental and atmospheric details
 3. Create a cinematic, epic scene suitable for battle
 
-Focus ONLY on these elements:
+Focus on these elements for the imagePrompt:
 - Landscape features and architecture
 - Weather conditions and time of day
 - Lighting and atmospheric effects
 - Environmental textures and materials
 - Mood and ambiance
 
-Important guidelines:
+Important guidelines for imagePrompt:
 - NO game-specific references or terminology
 - NO characters or creatures
 - Use universal fantasy elements
@@ -209,7 +221,10 @@ Important guidelines:
 
 Example response format:
 {
-    "prompt": "A majestic ruined temple perched on a misty mountain peak, ancient stone columns wrapped in luminescent vines. Golden sunlight pierces through storm clouds, casting dramatic shadows across weathered marble stairs. Crystal formations emerge from the temple floor, their ethereal blue glow reflecting off rain-slicked surfaces."
+    "loreDescription": "Deep within the mist-shrouded peaks of the Alterac Mountains lies an ancient night elven temple, its weathered stones still humming with the ethereal energies of the Well of Eternity. Moonlight filters through the perpetual fog, casting an otherworldly glow upon the intricate runes that dance across the temple's towering spires, their meanings lost to all but the most learned of the Kaldorei scholars.
+
+    The temple's grand courtyard, once host to the sacred rituals of the Sisterhood of Elune, now stands as a testament to the resilience of ancient magic. Crystal formations burst forth from the cracked marble floor, their surfaces reflecting the shimmering auroras that paint the mountain sky, while the whispers of ancient spirits echo through halls that have witnessed countless battles between the forces of order and chaos.",
+    "imagePrompt": "A majestic ruined temple perched on a misty mountain peak, ancient stone columns wrapped in luminescent vines. Golden sunlight pierces through storm clouds, casting dramatic shadows across weathered marble stairs. Crystal formations emerge from the temple floor, their ethereal blue glow reflecting off rain-slicked surfaces. Crumbling archways frame a dramatic vista of jagged peaks and swirling mists, while mysterious runes pulse with ancient power along the temple walls."
 }`,
                         },
                     ],
@@ -224,7 +239,10 @@ Example response format:
             const content = response.data.choices[0].message.content;
             try {
                 const parsedContent = JSON.parse(content);
-                return parsedContent.prompt;
+                return {
+                    imagePrompt: parsedContent.imagePrompt,
+                    loreDescription: parsedContent.loreDescription,
+                };
             } catch (parseError) {
                 console.error('Error parsing location prompt JSON:', parseError);
                 throw new Error('Failed to parse location prompt response');

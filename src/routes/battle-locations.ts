@@ -21,15 +21,15 @@ router.post('/', async (req, res) => {
             });
         }
 
-        // Generate the image prompt using OpenRouter
-        const image_prompt = await openRouterService.generateLocationPrompt(name, description);
+        // Generate the prompts using OpenRouter
+        const locationPrompts = await openRouterService.generateLocationPrompt(name, description);
 
         // Store in database
         const [location] = await db('app_battle_locations')
             .insert({
                 name,
-                lore: description,
-                image_prompt,
+                lore: locationPrompts.loreDescription,
+                image_prompt: locationPrompts.imagePrompt,
             })
             .returning('*');
 
