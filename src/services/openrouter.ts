@@ -42,6 +42,11 @@ interface Pet {
     abilities: PetAbility[];
 }
 
+// Type guard for Axios error
+function isAxiosError(error: unknown): error is Error & { response?: { data: unknown } } {
+    return error instanceof Error && 'response' in error;
+}
+
 class OpenRouterService {
     private readonly headers;
 
@@ -185,6 +190,8 @@ Example response format:
         description: string
     ): Promise<LocationPromptResponse> {
         try {
+            console.log('Generating location prompt for:', { name, description });
+
             const response = await axios.post<OpenRouterResponse>(
                 `${OPENROUTER_BASE_URL}/chat/completions`,
                 {
@@ -221,14 +228,14 @@ Important guidelines for imagePrompt:
 
 Example response format:
 {
-    "loreDescription": "Deep within the mist-shrouded peaks of the Alterac Mountains lies an ancient night elven temple, its weathered stones still humming with the ethereal energies of the Well of Eternity. Moonlight filters through the perpetual fog, casting an otherworldly glow upon the intricate runes that dance across the temple's towering spires, their meanings lost to all but the most learned of the Kaldorei scholars.
+    "loreDescription": "Deep within the mist-shrouded peaks lies an ancient temple, its weathered stones still humming with ethereal energies. Moonlight filters through the perpetual fog, casting an otherworldly glow upon the intricate runes that dance across the temple's towering spires.
 
-    The temple's grand courtyard, once host to the sacred rituals of the Sisterhood of Elune, now stands as a testament to the resilience of ancient magic. Crystal formations burst forth from the cracked marble floor, their surfaces reflecting the shimmering auroras that paint the mountain sky, while the whispers of ancient spirits echo through halls that have witnessed countless battles between the forces of order and chaos.",
-    "imagePrompt": "A majestic ruined temple perched on a misty mountain peak, ancient stone columns wrapped in luminescent vines. Golden sunlight pierces through storm clouds, casting dramatic shadows across weathered marble stairs. Crystal formations emerge from the temple floor, their ethereal blue glow reflecting off rain-slicked surfaces. Crumbling archways frame a dramatic vista of jagged peaks and swirling mists, while mysterious runes pulse with ancient power along the temple walls."
+    The temple's grand courtyard, once host to sacred rituals, now stands as a testament to the resilience of ancient magic. Crystal formations burst forth from the cracked marble floor, their surfaces reflecting the shimmering auroras that paint the mountain sky.",
+    "imagePrompt": "A majestic ruined temple perched on a misty mountain peak, ancient stone columns wrapped in luminescent vines. Golden sunlight pierces through storm clouds, casting dramatic shadows across weathered marble stairs. Crystal formations emerge from the temple floor, their ethereal blue glow reflecting off rain-slicked surfaces."
 }`,
                         },
                     ],
-                    temperature: 0.25,
+                    temperature: 0.7,
                     top_p: 1,
                     repetition_penalty: 1,
                 },
@@ -237,18 +244,32 @@ Example response format:
 
             // Parse the JSON response from Claude
             const content = response.data.choices[0].message.content;
+            console.log('Raw response content:', content);
+
             try {
-                const parsedContent = JSON.parse(content);
+                // Clean the content string - remove any non-printable characters
+                const cleanContent = content.replace(/[^\x20-\x7E\s]/g, '');
+                console.log('Cleaned content:', cleanContent);
+
+                const parsedContent = JSON.parse(cleanContent);
+                console.log('Parsed content:', parsedContent);
+
                 return {
                     imagePrompt: parsedContent.imagePrompt,
                     loreDescription: parsedContent.loreDescription,
                 };
-            } catch (parseError) {
-                console.error('Error parsing location prompt JSON:', parseError);
+            } catch (error) {
+                console.error('Error parsing location prompt JSON:', error);
+                if (error instanceof Error) {
+                    console.error('Parse error details:', error.message);
+                }
                 throw new Error('Failed to parse location prompt response');
             }
         } catch (error) {
             console.error('Error generating location prompt:', error);
+            if (isAxiosError(error)) {
+                console.error('OpenRouter API error response:', error.response?.data);
+            }
             throw new Error('Failed to generate location prompt');
         }
     }
