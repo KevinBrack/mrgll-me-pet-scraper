@@ -26,6 +26,11 @@ interface BattleNarrativeResponse {
     imagePrompt: string;
 }
 
+interface LocationPromptResponse {
+    imagePrompt: string;
+    loreDescription: string;
+}
+
 interface PetAbility {
     name: string;
     description: string;
@@ -35,6 +40,11 @@ interface Pet {
     name: string;
     description: string;
     abilities: PetAbility[];
+}
+
+// Type guard for Axios error
+function isAxiosError(error: unknown): error is Error & { response?: { data: unknown } } {
+    return error instanceof Error && 'response' in error;
 }
 
 class OpenRouterService {
@@ -172,6 +182,95 @@ Example response format:
         } catch (error) {
             console.error('Error generating image prompt:', error);
             throw new Error('Failed to generate image prompt');
+        }
+    }
+
+    async generateLocationPrompt(
+        name: string,
+        description: string
+    ): Promise<LocationPromptResponse> {
+        try {
+            console.log('Generating location prompt for:', { name, description });
+
+            const response = await axios.post<OpenRouterResponse>(
+                `${OPENROUTER_BASE_URL}/chat/completions`,
+                {
+                    model: 'anthropic/claude-3.5-sonnet',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `Create a location description and image prompt based on this World of Warcraft location. Return ONLY a JSON object with two fields as shown in the example format.
+
+Location name: ${name}
+Original description: ${description}
+
+Create two distinct outputs:
+1. A "loreDescription" that expands the location's story into 2 paragraphs using World of Warcraft terminology and lore references
+2. An "imagePrompt" that describes the visual scene in generic fantasy terms
+
+The imagePrompt should:
+1. Translate game-specific elements into generic fantasy equivalents
+2. Focus on environmental and atmospheric details
+3. Create a cinematic, epic scene suitable for battle
+
+Focus on these elements for the imagePrompt:
+- Landscape features and architecture
+- Weather conditions and time of day
+- Lighting and atmospheric effects
+- Environmental textures and materials
+- Mood and ambiance
+
+Important guidelines for imagePrompt:
+- NO game-specific references or terminology
+- NO characters or creatures
+- Use universal fantasy elements
+- Maintain location essence with generic terms
+
+Example response format:
+{
+    "loreDescription": "Deep within the mist-shrouded peaks lies an ancient temple, its weathered stones still humming with ethereal energies. Moonlight filters through the perpetual fog, casting an otherworldly glow upon the intricate runes that dance across the temple's towering spires.
+
+    The temple's grand courtyard, once host to sacred rituals, now stands as a testament to the resilience of ancient magic. Crystal formations burst forth from the cracked marble floor, their surfaces reflecting the shimmering auroras that paint the mountain sky.",
+    "imagePrompt": "A majestic ruined temple perched on a misty mountain peak, ancient stone columns wrapped in luminescent vines. Golden sunlight pierces through storm clouds, casting dramatic shadows across weathered marble stairs. Crystal formations emerge from the temple floor, their ethereal blue glow reflecting off rain-slicked surfaces."
+}`,
+                        },
+                    ],
+                    temperature: 0.7,
+                    top_p: 1,
+                    repetition_penalty: 1,
+                },
+                { headers: this.headers }
+            );
+
+            // Parse the JSON response from Claude
+            const content = response.data.choices[0].message.content;
+            console.log('Raw response content:', content);
+
+            try {
+                // Clean the content string - remove any non-printable characters
+                const cleanContent = content.replace(/[^\x20-\x7E\s]/g, '');
+                console.log('Cleaned content:', cleanContent);
+
+                const parsedContent = JSON.parse(cleanContent);
+                console.log('Parsed content:', parsedContent);
+
+                return {
+                    imagePrompt: parsedContent.imagePrompt,
+                    loreDescription: parsedContent.loreDescription,
+                };
+            } catch (error) {
+                console.error('Error parsing location prompt JSON:', error);
+                if (error instanceof Error) {
+                    console.error('Parse error details:', error.message);
+                }
+                throw new Error('Failed to parse location prompt response');
+            }
+        } catch (error) {
+            console.error('Error generating location prompt:', error);
+            if (isAxiosError(error)) {
+                console.error('OpenRouter API error response:', error.response?.data);
+            }
+            throw new Error('Failed to generate location prompt');
         }
     }
 }
