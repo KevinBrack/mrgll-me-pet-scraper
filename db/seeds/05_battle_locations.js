@@ -3,8 +3,10 @@
  * @returns { Promise<void> } 
  */
 exports.seed = async function(knex) {
-  // Deletes ALL existing entries
-  await knex('app_battle_locations').del();
+  // Delete only the specific locations we're replacing
+  await knex('app_battle_locations')
+    .whereIn('name', ['Nagrand', 'Zerith Mortis'])
+    .del();
   
   await knex('app_battle_locations').insert([
     {
