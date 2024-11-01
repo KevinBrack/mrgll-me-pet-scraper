@@ -174,6 +174,66 @@ Example response format:
             throw new Error('Failed to generate image prompt');
         }
     }
+
+    async generateLocationPrompt(name: string, description: string): Promise<string> {
+        try {
+            const response = await axios.post<OpenRouterResponse>(
+                `${OPENROUTER_BASE_URL}/chat/completions`,
+                {
+                    model: 'anthropic/claude-3.5-sonnet',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `Create an environment-focused image generation prompt based on this location. Return ONLY a JSON object with a single "prompt" field containing your response.
+
+Location name: ${name}
+Location description: ${description}
+
+The prompt should:
+1. Translate game-specific elements into generic fantasy equivalents
+2. Focus on environmental and atmospheric details
+3. Create a cinematic, epic scene suitable for battle
+
+Focus ONLY on these elements:
+- Landscape features and architecture
+- Weather conditions and time of day
+- Lighting and atmospheric effects
+- Environmental textures and materials
+- Mood and ambiance
+
+Important guidelines:
+- NO game-specific references or terminology
+- NO characters or creatures
+- Use universal fantasy elements
+- Maintain location essence with generic terms
+
+Example response format:
+{
+    "prompt": "A majestic ruined temple perched on a misty mountain peak, ancient stone columns wrapped in luminescent vines. Golden sunlight pierces through storm clouds, casting dramatic shadows across weathered marble stairs. Crystal formations emerge from the temple floor, their ethereal blue glow reflecting off rain-slicked surfaces."
+}`,
+                        },
+                    ],
+                    temperature: 0.25,
+                    top_p: 1,
+                    repetition_penalty: 1,
+                },
+                { headers: this.headers }
+            );
+
+            // Parse the JSON response from Claude
+            const content = response.data.choices[0].message.content;
+            try {
+                const parsedContent = JSON.parse(content);
+                return parsedContent.prompt;
+            } catch (parseError) {
+                console.error('Error parsing location prompt JSON:', parseError);
+                throw new Error('Failed to parse location prompt response');
+            }
+        } catch (error) {
+            console.error('Error generating location prompt:', error);
+            throw new Error('Failed to generate location prompt');
+        }
+    }
 }
 
 export default new OpenRouterService();
