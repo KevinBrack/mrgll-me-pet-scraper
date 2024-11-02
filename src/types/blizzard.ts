@@ -82,3 +82,54 @@ export interface PetAbilitiesResponse {
     slot: number;
     required_level: number;
 }
+
+export interface PetAbilitiesIndexResponse {
+    _links: {
+        self: {
+            href: string;
+        };
+    };
+    abilities: Array<{
+        key: {
+            href: string;
+        };
+        name: string;
+        id: number;
+    }>;
+}
+
+export interface PetAbilityDetailsResponse {
+    _links: {
+        self: {
+            href: string;
+        };
+    };
+    id: number;
+    name: string;
+    battle_pet_type: {
+        id: number;
+        type: string;
+        name: string;
+    };
+    rounds: number;
+    media: {
+        key: {
+            href: string;
+        };
+        id: number;
+    };
+}
+
+export interface PetAbilityMediaResponse {
+    _links: {
+        self: {
+            href: string;
+        };
+    };
+    assets: Array<{
+        key: string;
+        value: string;
+        file_data_id: number;
+    }>;
+    id: number;
+}
