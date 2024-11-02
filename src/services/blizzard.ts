@@ -1,5 +1,12 @@
 import axios from 'axios';
-import { PetsListResponse, PetDetailsResponse, PetMediaDetails } from '../types/blizzard';
+import {
+    PetsListResponse,
+    PetDetailsResponse,
+    PetMediaDetails,
+    PetAbilitiesIndexResponse,
+    PetAbilityDetailsResponse,
+    PetAbilityMediaResponse,
+} from '../types/blizzard';
 
 interface TokenResponse {
     access_token: string;
@@ -108,6 +115,39 @@ class BlizzardService {
         console.log(`Fetching media for pet ID: ${petId}`);
         return this.makeRequest<PetMediaDetails>(
             `https://us.api.blizzard.com/data/wow/media/pet/${petId}`,
+            {
+                namespace: 'static-us',
+                locale: 'en_US',
+            }
+        );
+    }
+
+    async getPetAbilitiesIndex(): Promise<PetAbilitiesIndexResponse> {
+        console.log('Fetching pet abilities index...');
+        return this.makeRequest<PetAbilitiesIndexResponse>(
+            'https://us.api.blizzard.com/data/wow/pet-ability/index',
+            {
+                namespace: 'static-us',
+                locale: 'en_US',
+            }
+        );
+    }
+
+    async getPetAbilityDetails(abilityId: number): Promise<PetAbilityDetailsResponse> {
+        console.log(`Fetching details for pet ability ID: ${abilityId}`);
+        return this.makeRequest<PetAbilityDetailsResponse>(
+            `https://us.api.blizzard.com/data/wow/pet-ability/${abilityId}`,
+            {
+                namespace: 'static-us',
+                locale: 'en_US',
+            }
+        );
+    }
+
+    async getPetAbilityMedia(abilityId: number): Promise<PetAbilityMediaResponse> {
+        console.log(`Fetching media for pet ability ID: ${abilityId}`);
+        return this.makeRequest<PetAbilityMediaResponse>(
+            `https://us.api.blizzard.com/data/wow/media/pet-ability/${abilityId}`,
             {
                 namespace: 'static-us',
                 locale: 'en_US',
