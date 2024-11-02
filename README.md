@@ -26,12 +26,14 @@ A TypeScript/Node.js application that fetches and stores World of Warcraft battl
 
 ## Prerequisites
 
--   Node.js (v14 or higher)
--   npm or yarn
+-   Node.js (v14 or higher) or Docker
+-   npm or yarn (for local development)
 -   SQLite (development) or PostgreSQL (production)
 -   OpenRouter API key for AI content generation
 
 ## Development Setup
+
+### Using Docker (Recommended)
 
 1. Clone the repository:
 
@@ -98,6 +100,10 @@ The development database comes pre-populated with five carefully selected pets, 
 1. Start the server:
 
 ```bash
+# Using Docker
+docker-compose up
+
+# Local development
 npm start
 ```
 
@@ -113,11 +119,14 @@ npm start
 1. Start the development server with auto-reload:
 
 ```bash
+# Using Docker
+docker-compose up
+
+# Local development
 npm run dev
 ```
 
-2. Run TypeScript compilation in watch mode:
-
+2. Run TypeScript compilation in watch mode (local development only):
 ```bash
 npm run watch-ts
 ```
@@ -129,9 +138,17 @@ npm run watch-ts
 
 ### Migrations
 
--   Run migrations: `npx knex migrate:latest`
--   Rollback migrations: `npx knex migrate:rollback`
--   Create new migration: `npx knex migrate:make migration_name`
+```bash
+# Using Docker
+docker-compose exec api npx knex migrate:latest
+docker-compose exec api npx knex migrate:rollback
+docker-compose exec api npx knex migrate:make migration_name
+
+# Local development
+npx knex migrate:latest
+npx knex migrate:rollback
+npx knex migrate:make migration_name
+```
 
 ### Tables
 
