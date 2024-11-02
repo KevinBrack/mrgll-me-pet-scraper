@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for development
+      - .:/app
+      # Don't mount node_modules from host
+      - /app/node_modules
+      # Persist SQLite database
+      - sqlite_data:/app/db
+    environment:
+      - NODE_ENV=development
+      # Add your environment variables here
+      - BLIZZARD_CLIENT_ID=${BLIZZARD_CLIENT_ID}
+      - BLIZZARD_CLIENT_SECRET=${BLIZZARD_CLIENT_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    # Enable terminal for development
+    tty: true
+    stdin_open: true
+
+volumes:
+  sqlite_data:
+    # Named volume for SQLite database persistence
