@@ -11,7 +11,7 @@
     "migrate-down": "knex migrate:rollback",
     "seed": "knex seed:run",
     "migrate-make": "knex migrate:make",
-    "check-db": "node scripts/check-db.js",
+    "check-db": "node .scripts/check-db.js",
     "init-dev-db": "npm run check-db && npm run migrate-up && npm run seed",
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
