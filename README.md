@@ -9,11 +9,20 @@ A TypeScript/Node.js application that fetches and stores World of Warcraft battl
 -   Automatic OAuth token management using client credentials
 -   TypeScript for type safety and better developer experience
 -   Batch scraping of pet images from Warcraftpets.com with configurable limits
+-   Comprehensive pet abilities system:
+    -   Fetches and stores all pet abilities from Blizzard's API
+    -   Caches ability details and icons for quick access
+    -   Maintains relationships between pets and their abilities
+-   Battle location management:
+    -   AI-generated lore for battle arenas
+    -   Dynamic image prompts for location visualization
+    -   Rich descriptions of battle environments
 -   AI-powered content generation through OpenRouter API:
     -   Dynamic battle narratives between pets
     -   Detailed image prompts for pet visualizations
     -   Batch processing of image prompts with progress tracking
     -   Art style customization with stored templates
+    -   Location-specific battle scene generation
 
 ## Prerequisites
 
