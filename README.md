@@ -132,6 +132,8 @@ The application uses the following main tables:
 2. `warcraftpets_images`: Stores pet image URLs and page references from Warcraftpets.com
 3. `prompts_art_styles`: Stores art style templates for image generation
 4. `app_prompts_pet_image`: Stores generated image prompts with metadata
+5. `blizzard_pet_abilities`: Stores pet abilities data including names, icons, and cached details from Blizzard's API
+6. `app_battle_locations`: Stores battle arena locations with names, lore descriptions, and image generation prompts
 
 ## Code Standards
 
